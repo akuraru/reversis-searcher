@@ -1,126 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"html/template"
-	"log"
-	"net/http"
 	"strconv"
 	"strings"
 )
-
-func newHandler() http.Handler {
-	return newHandlerWithStore(newMemoryBoardStore())
-}
-
-func newHandlerWithStore(store boardStore) http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || !strings.HasPrefix(r.URL.Path, "/boards/") {
-			http.NotFound(w, r)
-			return
-		}
-		if r.Method != http.MethodGet && r.Method != http.MethodHead {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		id := strings.TrimPrefix(r.URL.Path, "/boards/")
-		if id == "" || strings.Contains(id, "/") {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-		current, err := store.Get(id)
-		if errors.Is(err, errInvalidBoardID) {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, errBoardNotFound) {
-			http.NotFound(w, r)
-			return
-		}
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		page := newBoardPage(current)
-		var body bytes.Buffer
-		if err := boardPageTemplate.Execute(&body, page); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", body.Len()))
-		if r.Method == http.MethodHead {
-			return
-		}
-		_, _ = w.Write(body.Bytes())
-	})
-	return mux
-}
-
-type boardPage struct {
-	ID      string
-	Turn    byte
-	Status  string
-	Columns []string
-	Rows    []boardRow
-}
-
-type boardRow struct {
-	Number int
-	Cells  []boardCell
-}
-
-type boardCell struct {
-	Value byte
-	Move  string
-}
-
-func newBoardPage(b board) boardPage {
-	dimension, _ := boardDimension(b.size)
-	columns := make([]string, dimension)
-	for i := range columns {
-		columns[i] = string(rune('A' + i))
-	}
-	moves := legalNextBoards(b)
-	moveByIndex := make(map[int]string)
-	for _, move := range moves {
-		for index, cell := range move.cells {
-			if b.cells[index] == emptyCell && cell != emptyCell {
-				moveByIndex[index] = move.id()
-				break
-			}
-		}
-	}
-	rows := make([]boardRow, dimension)
-	for row := range rows {
-		rows[row].Number = row + 1
-		rows[row].Cells = make([]boardCell, dimension)
-		for column := range rows[row].Cells {
-			index := row*dimension + column
-			rows[row].Cells[column] = boardCell{Value: b.cells[index], Move: moveByIndex[index]}
-		}
-	}
-	return boardPage{ID: b.id(), Turn: b.turn, Status: b.status, Columns: columns, Rows: rows}
-}
-
-var boardPageTemplate = template.Must(template.New("board").Parse(`<!doctype html>
-<html lang="ja">
-<head><meta charset="utf-8"><title>リバーシ {{.ID}}</title></head>
-<body>
-<h1>リバーシ盤面</h1>
-<p>盤面ID: <code>{{.ID}}</code></p>
-<p>手番: {{if eq .Turn 1}}黒{{else if eq .Turn 2}}白{{else}}決着{{end}}</p>
-<p>状態: {{.Status}}</p>
-<table>
-<thead><tr><th></th>{{range .Columns}}<th>{{.}}</th>{{end}}</tr></thead>
-<tbody>{{range .Rows}}<tr><th>{{.Number}}</th>{{range .Cells}}<td>{{if .Move}}<a href="/boards/{{.Move}}">{{end}}{{if eq .Value 1}}●{{else if eq .Value 2}}○{{else}}・{{end}}{{if .Move}}</a>{{end}}</td>{{end}}</tr>{{end}}</tbody>
-</table>
-</body>
-</html>`))
 
 const (
 	emptyCell byte = iota
@@ -166,6 +52,7 @@ func parseBoardID(id string) (board, error) {
 	if len(parts) != 3 {
 		return board{}, errInvalidBoardID
 	}
+
 	size, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return board{}, errInvalidBoardID
@@ -174,10 +61,12 @@ func parseBoardID(id string) (board, error) {
 	if !ok {
 		return board{}, errInvalidBoardID
 	}
+
 	turn, err := strconv.Atoi(parts[1])
 	if err != nil || (turn != 1 && turn != 2 && turn != 3) {
 		return board{}, errInvalidBoardID
 	}
+
 	if len(parts[2]) != dimension*dimension*2 {
 		return board{}, errInvalidBoardID
 	}
@@ -190,6 +79,7 @@ func parseBoardID(id string) (board, error) {
 			return board{}, errInvalidBoardID
 		}
 	}
+
 	return board{size: size, turn: byte(turn), cells: cells, status: boardStatus(cells)}, nil
 }
 
@@ -275,11 +165,4 @@ func legalNextBoards(current board) []board {
 		nextBoards = append(nextBoards, board{size: current.size, turn: opponent, cells: cells, status: boardStatus(cells)})
 	}
 	return nextBoards
-}
-
-func main() {
-	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", newHandler()); err != nil {
-		log.Fatal(err)
-	}
 }
