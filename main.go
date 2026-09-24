@@ -122,6 +122,13 @@ var boardPageTemplate = template.Must(template.New("board").Parse(`<!doctype htm
 </body>
 </html>`))
 
+func main() {
+	log.Println("Server started on :8080")
+	if err := http.ListenAndServe(":8080", newHandler()); err != nil {
+		log.Fatal(err)
+	}
+}
+
 const (
 	emptyCell byte = iota
 	blackCell
@@ -275,11 +282,4 @@ func legalNextBoards(current board) []board {
 		nextBoards = append(nextBoards, board{size: current.size, turn: opponent, cells: cells, status: boardStatus(cells)})
 	}
 	return nextBoards
-}
-
-func main() {
-	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", newHandler()); err != nil {
-		log.Fatal(err)
-	}
 }
