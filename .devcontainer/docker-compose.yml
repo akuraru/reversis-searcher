@@ -1,0 +1,43 @@
+volumes:
+  postgres-data:
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+       # Ensure that the variables in .env match the same variables in devcontainer.json
+       - .env
+
+    volumes:
+      - ../..:/workspaces:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    network_mode: service:db
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+
+    # Health check ensures PostgreSQL is ready before dependent services start
+    # This is critical for depends_on with condition: service_healthy to work properly
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s # Check every 10 seconds
+      timeout: 5s # Wait up to 5 seconds for response
+      retries: 5 # Retry 5 times before marking as unhealthy
+      start_period: 30s # Give PostgreSQL 30 seconds to start before health checks begin
+
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    env_file:
+      # Ensure that the variables in .env match the same variables in devcontainer.json
+      - .env
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
