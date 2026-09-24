@@ -245,10 +245,27 @@ func (s *memoryBoardStore) Get(id string) (board, error) {
 }
 
 func legalNextBoards(current board) []board {
-	dimension, _ := boardDimension(current.size)
 	if current.turn == 3 {
 		return nil
 	}
+	moves := legalMoveBoards(current)
+	if len(moves) > 0 {
+		return moves
+	}
+
+	passed := current
+	passed.turn = byte(3 - current.turn)
+	if len(legalMoveBoards(passed)) > 0 {
+		return []board{passed}
+	}
+
+	ended := current
+	ended.turn = 3
+	return []board{ended}
+}
+
+func legalMoveBoards(current board) []board {
+	dimension, _ := boardDimension(current.size)
 	stone := current.turn
 	opponent := byte(3 - current.turn)
 	directions := [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}
