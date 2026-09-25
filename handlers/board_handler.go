@@ -52,7 +52,7 @@ func NewBoardPage(b board.Board) BoardPage {
 			rows[row].Cells[column] = BoardCell{Value: b.Cells[index], Move: moveByIndex[index]}
 		}
 	}
-	return BoardPage{ID: b.ID(), Turn: b.Turn, Status: b.Status, Columns: columns, Rows: rows}
+	return BoardPage{ID: b.ID(), Turn: b.Turn, Status: b.BoardStatus(), Columns: columns, Rows: rows}
 }
 
 var BoardPageTemplate = template.Must(template.New("board").Parse(`<!doctype html>

@@ -23,14 +23,20 @@ func TestParseBoardIDValid(t *testing.T) {
 	if string(got.Cells) != string(want.Cells) {
 		t.Fatalf("Cells = %v, want %v", got.Cells, want.Cells)
 	}
-	if got.Status != want.Status {
-		t.Fatalf("Status = %q, want %q", got.Status, want.Status)
+	if got.BoardStatus() != want.BoardStatus() {
+		t.Fatalf("BoardStatus() = %q, want %q", got.BoardStatus(), want.BoardStatus())
 	}
 }
 
 func TestInitialBoardHasDimension(t *testing.T) {
 	if got := InitialBoard().Dimension; got != 4 {
 		t.Fatalf("InitialBoard().Dimension = %d, want 4", got)
+	}
+}
+
+func TestBoardStatusMethod(t *testing.T) {
+	if got := InitialBoard().BoardStatus(); got != "黒 2、白 2" {
+		t.Fatalf("InitialBoard().BoardStatus() = %q, want %q", got, "黒 2、白 2")
 	}
 }
 

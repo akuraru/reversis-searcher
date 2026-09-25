@@ -28,7 +28,6 @@ type Board struct {
 	Dimension int
 	Turn      Turn
 	Cells     []Cell
-	Status    string
 }
 
 type Store interface {
@@ -93,12 +92,12 @@ func ParseBoardID(id string) (Board, error) {
 			return Board{}, ErrInvalidBoardID
 		}
 	}
-	return Board{Size: size, Dimension: dimension, Turn: Turn(turn), Cells: cells, Status: BoardStatus(cells)}, nil
+	return Board{Size: size, Dimension: dimension, Turn: Turn(turn), Cells: cells}, nil
 }
 
-func BoardStatus(cells []Cell) string {
+func (b Board) BoardStatus() string {
 	black, white := 0, 0
-	for _, cell := range cells {
+	for _, cell := range b.Cells {
 		switch cell {
 		case BlackCell:
 			black++
@@ -113,7 +112,7 @@ func InitialBoard() Board {
 	cells := make([]Cell, 16)
 	cells[5], cells[6] = WhiteCell, BlackCell
 	cells[9], cells[10] = BlackCell, WhiteCell
-	return Board{Size: 2, Dimension: 4, Turn: BlackTurn, Cells: cells, Status: BoardStatus(cells)}
+	return Board{Size: 2, Dimension: 4, Turn: BlackTurn, Cells: cells}
 }
 
 func LegalNextBoards(current Board) []Board {
@@ -167,7 +166,7 @@ func legalMoveBoards(current Board) []Board {
 		for _, flip := range flips {
 			cells[flip] = stone
 		}
-		nextBoards = append(nextBoards, Board{Size: current.Size, Dimension: dimension, Turn: opponent, Cells: cells, Status: BoardStatus(cells)})
+		nextBoards = append(nextBoards, Board{Size: current.Size, Dimension: dimension, Turn: opponent, Cells: cells})
 	}
 	return nextBoards
 }
