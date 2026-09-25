@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
+type Cell byte
+
 const (
-	EmptyCell byte = iota
+	EmptyCell Cell = iota
 	BlackCell
 	WhiteCell
 )
@@ -25,7 +27,7 @@ const (
 type Board struct {
 	Size   int
 	Turn   Turn
-	Cells  []byte
+	Cells  []Cell
 	Status string
 }
 
@@ -52,7 +54,11 @@ func BoardDimension(size int) (int, bool) {
 }
 
 func (b Board) ID() string {
-	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, hex.EncodeToString(b.Cells))
+	bytes := make([]byte, len(b.Cells))
+	for index, cell := range b.Cells {
+		bytes[index] = byte(cell)
+	}
+	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, hex.EncodeToString(bytes))
 }
 
 func ParseBoardID(id string) (Board, error) {
@@ -75,9 +81,13 @@ func ParseBoardID(id string) (Board, error) {
 	if len(parts[2]) != dimension*dimension*2 {
 		return Board{}, ErrInvalidBoardID
 	}
-	cells, err := hex.DecodeString(parts[2])
+	decoded, err := hex.DecodeString(parts[2])
 	if err != nil {
 		return Board{}, ErrInvalidBoardID
+	}
+	cells := make([]Cell, len(decoded))
+	for index, cell := range decoded {
+		cells[index] = Cell(cell)
 	}
 	for _, cell := range cells {
 		if cell > WhiteCell {
@@ -87,7 +97,7 @@ func ParseBoardID(id string) (Board, error) {
 	return Board{Size: size, Turn: Turn(turn), Cells: cells, Status: BoardStatus(cells)}, nil
 }
 
-func BoardStatus(cells []byte) string {
+func BoardStatus(cells []Cell) string {
 	black, white := 0, 0
 	for _, cell := range cells {
 		switch cell {
@@ -101,7 +111,7 @@ func BoardStatus(cells []byte) string {
 }
 
 func InitialBoard() Board {
-	cells := make([]byte, 16)
+	cells := make([]Cell, 16)
 	cells[5], cells[6] = WhiteCell, BlackCell
 	cells[9], cells[10] = BlackCell, WhiteCell
 	return Board{Size: 2, Turn: BlackTurn, Cells: cells, Status: BoardStatus(cells)}
@@ -127,8 +137,9 @@ func LegalNextBoards(current Board) []Board {
 
 func legalMoveBoards(current Board) []Board {
 	dimension, _ := BoardDimension(current.Size)
-	stone := byte(current.Turn)
+	stone := Cell(current.Turn)
 	opponent := Turn(3 - current.Turn)
+	opponentCell := Cell(opponent)
 	directions := [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}
 	var nextBoards []Board
 	for index, cell := range current.Cells {
@@ -140,7 +151,7 @@ func legalMoveBoards(current Board) []Board {
 		for _, direction := range directions {
 			r, c := row+direction[0], column+direction[1]
 			line := []int{}
-			for r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == byte(opponent) {
+			for r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == opponentCell {
 				line = append(line, r*dimension+c)
 				r += direction[0]
 				c += direction[1]
@@ -152,7 +163,7 @@ func legalMoveBoards(current Board) []Board {
 		if len(flips) == 0 {
 			continue
 		}
-		cells := append([]byte(nil), current.Cells...)
+		cells := append([]Cell(nil), current.Cells...)
 		cells[index] = stone
 		for _, flip := range flips {
 			cells[flip] = stone

@@ -23,7 +23,7 @@ type BoardRow struct {
 }
 
 type BoardCell struct {
-	Value byte
+	Value board.Cell
 	Move  string
 }
 
