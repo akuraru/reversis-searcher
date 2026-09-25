@@ -28,7 +28,7 @@ type BoardCell struct {
 }
 
 func NewBoardPage(b board.Board) BoardPage {
-	dimension, _ := board.BoardDimension(b.Size)
+	dimension := b.Dimension
 	columns := make([]string, dimension)
 	for i := range columns {
 		columns[i] = string(rune('A' + i))

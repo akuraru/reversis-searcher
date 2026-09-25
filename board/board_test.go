@@ -14,6 +14,9 @@ func TestParseBoardIDValid(t *testing.T) {
 	if got.Size != want.Size {
 		t.Fatalf("Size = %d, want %d", got.Size, want.Size)
 	}
+	if got.Dimension != want.Dimension {
+		t.Fatalf("Dimension = %d, want %d", got.Dimension, want.Dimension)
+	}
 	if got.Turn != want.Turn {
 		t.Fatalf("Turn = %d, want %d", got.Turn, want.Turn)
 	}
@@ -22,6 +25,12 @@ func TestParseBoardIDValid(t *testing.T) {
 	}
 	if got.Status != want.Status {
 		t.Fatalf("Status = %q, want %q", got.Status, want.Status)
+	}
+}
+
+func TestInitialBoardHasDimension(t *testing.T) {
+	if got := InitialBoard().Dimension; got != 4 {
+		t.Fatalf("InitialBoard().Dimension = %d, want 4", got)
 	}
 }
 
