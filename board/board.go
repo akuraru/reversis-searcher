@@ -126,32 +126,32 @@ func InitialBoards() []Board {
 	return []Board{InitialBoard(2), InitialBoard(3), InitialBoard(4)}
 }
 
-func LegalNextBoards(current Board) []Board {
-	if current.Turn == FinishedTurn {
+func (b Board) LegalNextBoards() []Board {
+	if b.Turn == FinishedTurn {
 		return nil
 	}
-	moves := legalMoveBoards(current)
+	moves := b.legalMoveBoards()
 	if len(moves) > 0 {
 		return moves
 	}
-	passed := current
-	passed.Turn = Turn(3 - current.Turn)
-	if len(legalMoveBoards(passed)) > 0 {
+	passed := b
+	passed.Turn = Turn(3 - b.Turn)
+	if len(passed.legalMoveBoards()) > 0 {
 		return []Board{passed}
 	}
-	ended := current
+	ended := b
 	ended.Turn = FinishedTurn
 	return []Board{ended}
 }
 
-func legalMoveBoards(current Board) []Board {
-	dimension := current.Dimension
-	stone := Cell(current.Turn)
-	opponent := Turn(3 - current.Turn)
+func (b Board) legalMoveBoards() []Board {
+	dimension := b.Dimension
+	stone := Cell(b.Turn)
+	opponent := Turn(3 - b.Turn)
 	opponentCell := Cell(opponent)
 	directions := [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}
 	var nextBoards []Board
-	for index, cell := range current.Cells {
+	for index, cell := range b.Cells {
 		if cell != EmptyCell {
 			continue
 		}
@@ -160,24 +160,24 @@ func legalMoveBoards(current Board) []Board {
 		for _, direction := range directions {
 			r, c := row+direction[0], column+direction[1]
 			line := []int{}
-			for r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == opponentCell {
+			for r >= 0 && r < dimension && c >= 0 && c < dimension && b.Cells[r*dimension+c] == opponentCell {
 				line = append(line, r*dimension+c)
 				r += direction[0]
 				c += direction[1]
 			}
-			if len(line) > 0 && r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == stone {
+			if len(line) > 0 && r >= 0 && r < dimension && c >= 0 && c < dimension && b.Cells[r*dimension+c] == stone {
 				flips = append(flips, line...)
 			}
 		}
 		if len(flips) == 0 {
 			continue
 		}
-		cells := append([]Cell(nil), current.Cells...)
+		cells := append([]Cell(nil), b.Cells...)
 		cells[index] = stone
 		for _, flip := range flips {
 			cells[flip] = stone
 		}
-		nextBoards = append(nextBoards, Board{Size: current.Size, Dimension: dimension, Turn: opponent, Cells: cells})
+		nextBoards = append(nextBoards, Board{Size: b.Size, Dimension: dimension, Turn: opponent, Cells: cells})
 	}
 	return nextBoards
 }

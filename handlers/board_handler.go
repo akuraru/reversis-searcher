@@ -33,7 +33,7 @@ func NewBoardPage(b board.Board) BoardPage {
 	for i := range columns {
 		columns[i] = string(rune('A' + i))
 	}
-	moves := board.LegalNextBoards(b)
+	moves := b.LegalNextBoards()
 	moveByIndex := make(map[int]string)
 	for _, move := range moves {
 		for index, cell := range move.Cells {

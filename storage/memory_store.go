@@ -7,9 +7,9 @@ type MemoryBoardStore struct {
 }
 
 func NewMemoryBoardStore() *MemoryBoardStore {
-	initial := board.InitialBoard()
+	initial := board.InitialBoard(2)
 	store := &MemoryBoardStore{boards: map[string]board.Board{initial.ID(): initial}}
-	for _, next := range board.LegalNextBoards(initial) {
+	for _, next := range initial.LegalNextBoards() {
 		store.boards[next.ID()] = next
 	}
 	return store

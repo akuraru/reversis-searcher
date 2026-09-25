@@ -44,14 +44,22 @@ func TestInitialBoardHasDimension(t *testing.T) {
 }
 
 func TestBoardStatusMethod(t *testing.T) {
-	if got := InitialBoard().BoardStatus(); got != "黒 2、白 2" {
-		t.Fatalf("InitialBoard().BoardStatus() = %q, want %q", got, "黒 2、白 2")
+	if got := InitialBoard(2).BoardStatus(); got != "黒 2、白 2" {
+		t.Fatalf("InitialBoard(2).BoardStatus() = %q, want %q", got, "黒 2、白 2")
+	}
+}
+
+func TestLegalNextBoardsMethod(t *testing.T) {
+	initial := InitialBoard(2)
+	moves := initial.LegalNextBoards()
+	if len(moves) != 4 {
+		t.Fatalf("initial.LegalNextBoards() = %d, want 4", len(moves))
 	}
 }
 
 func TestParseBoardIDAcceptsValidIDs(t *testing.T) {
 	tests := []string{
-		InitialBoard().ID(),
+		InitialBoard(2).ID(),
 		"2-2-" + strings.Repeat("1", 16),
 		"2-3-" + strings.Repeat("2", 16),
 		"4-1-" + strings.Repeat("0", 64),
