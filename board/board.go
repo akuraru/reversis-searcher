@@ -52,12 +52,22 @@ func BoardDimension(size int) (int, bool) {
 	}
 }
 
-func (b Board) ID() string {
-	cells := make([]byte, len(b.Cells))
-	for index, cell := range b.Cells {
-		cells[index] = '0' + byte(cell)
+func InitialBoard(targetSize int) Board {
+	dimension, ok := BoardDimension(targetSize)
+	if !ok {
+		return Board{}
 	}
-	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, cells)
+	cells := make([]Cell, dimension*dimension)
+	center := dimension / 2
+	cells[(center-1)*dimension+(center-1)] = WhiteCell
+	cells[(center-1)*dimension+center] = BlackCell
+	cells[center*dimension+(center-1)] = BlackCell
+	cells[center*dimension+center] = WhiteCell
+	return Board{Size: targetSize, Dimension: dimension, Turn: BlackTurn, Cells: cells}
+}
+
+func InitialBoards() []Board {
+	return []Board{InitialBoard(2), InitialBoard(3), InitialBoard(4)}
 }
 
 func ParseBoardID(id string) (Board, error) {
@@ -95,6 +105,14 @@ func ParseBoardID(id string) (Board, error) {
 	return Board{Size: size, Dimension: dimension, Turn: Turn(turn), Cells: cells}, nil
 }
 
+func (b Board) ID() string {
+	cells := make([]byte, len(b.Cells))
+	for index, cell := range b.Cells {
+		cells[index] = '0' + byte(cell)
+	}
+	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, cells)
+}
+
 func (b Board) BoardStatus() string {
 	black, white := 0, 0
 	for _, cell := range b.Cells {
@@ -106,24 +124,6 @@ func (b Board) BoardStatus() string {
 		}
 	}
 	return fmt.Sprintf("黒 %d、白 %d", black, white)
-}
-
-func InitialBoard(targetSize int) Board {
-	dimension, ok := BoardDimension(targetSize)
-	if !ok {
-		return Board{}
-	}
-	cells := make([]Cell, dimension*dimension)
-	center := dimension / 2
-	cells[(center-1)*dimension+(center-1)] = WhiteCell
-	cells[(center-1)*dimension+center] = BlackCell
-	cells[center*dimension+(center-1)] = BlackCell
-	cells[center*dimension+center] = WhiteCell
-	return Board{Size: targetSize, Dimension: dimension, Turn: BlackTurn, Cells: cells}
-}
-
-func InitialBoards() []Board {
-	return []Board{InitialBoard(2), InitialBoard(3), InitialBoard(4)}
 }
 
 func (b Board) LegalNextBoards() []Board {
