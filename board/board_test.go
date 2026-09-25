@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseBoardIDValid(t *testing.T) {
-	want := InitialBoard()
+	want := InitialBoard(2)
 	got, err := ParseBoardID(want.ID())
 	if err != nil {
 		t.Fatalf("ParseBoardID(%q) returned error: %v", want.ID(), err)
@@ -29,8 +29,17 @@ func TestParseBoardIDValid(t *testing.T) {
 }
 
 func TestInitialBoardHasDimension(t *testing.T) {
-	if got := InitialBoard().Dimension; got != 4 {
-		t.Fatalf("InitialBoard().Dimension = %d, want 4", got)
+	for _, tt := range []struct {
+		size int
+		want int
+	}{
+		{size: 2, want: 4},
+		{size: 3, want: 6},
+		{size: 4, want: 8},
+	} {
+		if got := InitialBoard(tt.size).Dimension; got != tt.want {
+			t.Fatalf("InitialBoard(%d).Dimension = %d, want %d", tt.size, got, tt.want)
+		}
 	}
 }
 

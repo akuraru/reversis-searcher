@@ -108,11 +108,22 @@ func (b Board) BoardStatus() string {
 	return fmt.Sprintf("黒 %d、白 %d", black, white)
 }
 
-func InitialBoard() Board {
-	cells := make([]Cell, 16)
-	cells[5], cells[6] = WhiteCell, BlackCell
-	cells[9], cells[10] = BlackCell, WhiteCell
-	return Board{Size: 2, Dimension: 4, Turn: BlackTurn, Cells: cells}
+func InitialBoard(targetSize int) Board {
+	dimension, ok := BoardDimension(targetSize)
+	if !ok {
+		return Board{}
+	}
+	cells := make([]Cell, dimension*dimension)
+	center := dimension / 2
+	cells[(center-1)*dimension+(center-1)] = WhiteCell
+	cells[(center-1)*dimension+center] = BlackCell
+	cells[center*dimension+(center-1)] = BlackCell
+	cells[center*dimension+center] = WhiteCell
+	return Board{Size: targetSize, Dimension: dimension, Turn: BlackTurn, Cells: cells}
+}
+
+func InitialBoards() []Board {
+	return []Board{InitialBoard(2), InitialBoard(3), InitialBoard(4)}
 }
 
 func LegalNextBoards(current Board) []Board {
