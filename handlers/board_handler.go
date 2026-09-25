@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"reversis-searcher/board"
+	"reversis-searcher/usecase"
 )
 
 type BoardPage struct {
@@ -30,6 +31,7 @@ type BoardCell struct {
 }
 
 func NewBoardHandler(store board.Store) http.Handler {
+	boardUseCase := usecase.NewBoardUseCase(store)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, "/boards/") {
 			http.NotFound(w, r)
@@ -44,20 +46,7 @@ func NewBoardHandler(store board.Store) http.Handler {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		current, err := store.Get(id)
-		if errors.Is(err, board.ErrInvalidBoardID) {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-		if errors.Is(err, board.ErrBoardNotFound) {
-			http.NotFound(w, r)
-			return
-		}
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		WriteBoardPage(w, r, current)
+		WriteBoardPage(w, r, id, boardUseCase)
 	})
 }
 
@@ -105,7 +94,20 @@ var BoardPageTemplate = template.Must(template.New("board").Parse(`<!doctype htm
 </html>
 `))
 
-func WriteBoardPage(w http.ResponseWriter, r *http.Request, b board.Board) {
+func WriteBoardPage(w http.ResponseWriter, r *http.Request, id string, boardUseCase *usecase.BoardUseCase) {
+	b, err := boardUseCase.GetBoard(id)
+	if errors.Is(err, board.ErrInvalidBoardID) {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	if errors.Is(err, board.ErrBoardNotFound) {
+		http.NotFound(w, r)
+		return
+	}
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	page := NewBoardPage(b)
 	var body bytes.Buffer
