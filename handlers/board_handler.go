@@ -11,7 +11,7 @@ import (
 
 type BoardPage struct {
 	ID      string
-	Turn    byte
+	Turn    board.Turn
 	Status  string
 	Columns []string
 	Rows    []BoardRow

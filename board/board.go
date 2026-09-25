@@ -14,9 +14,17 @@ const (
 	WhiteCell
 )
 
+type Turn byte
+
+const (
+	BlackTurn Turn = iota + 1
+	WhiteTurn
+	FinishedTurn
+)
+
 type Board struct {
 	Size   int
-	Turn   byte
+	Turn   Turn
 	Cells  []byte
 	Status string
 }
@@ -76,7 +84,7 @@ func ParseBoardID(id string) (Board, error) {
 			return Board{}, ErrInvalidBoardID
 		}
 	}
-	return Board{Size: size, Turn: byte(turn), Cells: cells, Status: BoardStatus(cells)}, nil
+	return Board{Size: size, Turn: Turn(turn), Cells: cells, Status: BoardStatus(cells)}, nil
 }
 
 func BoardStatus(cells []byte) string {
@@ -96,11 +104,11 @@ func InitialBoard() Board {
 	cells := make([]byte, 16)
 	cells[5], cells[6] = WhiteCell, BlackCell
 	cells[9], cells[10] = BlackCell, WhiteCell
-	return Board{Size: 2, Turn: 1, Cells: cells, Status: BoardStatus(cells)}
+	return Board{Size: 2, Turn: BlackTurn, Cells: cells, Status: BoardStatus(cells)}
 }
 
 func LegalNextBoards(current Board) []Board {
-	if current.Turn == 3 {
+	if current.Turn == FinishedTurn {
 		return nil
 	}
 	moves := legalMoveBoards(current)
@@ -108,19 +116,19 @@ func LegalNextBoards(current Board) []Board {
 		return moves
 	}
 	passed := current
-	passed.Turn = byte(3 - current.Turn)
+	passed.Turn = Turn(3 - current.Turn)
 	if len(legalMoveBoards(passed)) > 0 {
 		return []Board{passed}
 	}
 	ended := current
-	ended.Turn = 3
+	ended.Turn = FinishedTurn
 	return []Board{ended}
 }
 
 func legalMoveBoards(current Board) []Board {
 	dimension, _ := BoardDimension(current.Size)
-	stone := current.Turn
-	opponent := byte(3 - current.Turn)
+	stone := byte(current.Turn)
+	opponent := Turn(3 - current.Turn)
 	directions := [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}}
 	var nextBoards []Board
 	for index, cell := range current.Cells {
@@ -132,7 +140,7 @@ func legalMoveBoards(current Board) []Board {
 		for _, direction := range directions {
 			r, c := row+direction[0], column+direction[1]
 			line := []int{}
-			for r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == opponent {
+			for r >= 0 && r < dimension && c >= 0 && c < dimension && current.Cells[r*dimension+c] == byte(opponent) {
 				line = append(line, r*dimension+c)
 				r += direction[0]
 				c += direction[1]
