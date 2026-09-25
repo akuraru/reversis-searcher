@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	boardpkg "reversis-searcher/board"
 )
 
 func TestBoardHandler(t *testing.T) {
@@ -28,6 +30,27 @@ func TestBoardHandler(t *testing.T) {
 	}
 	if got := strings.Count(body, "href=\"/boards/"); got != 4 {
 		t.Fatalf("legal move links = %d, want 4", got)
+	}
+}
+
+func TestIndexPageLinksToInitialBoards(t *testing.T) {
+	res := httptest.NewRecorder()
+	newHandler().ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/", nil))
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("status code = %d, want %d", res.Code, http.StatusOK)
+	}
+	for _, initial := range []boardpkg.Board{boardpkg.InitialBoard(2), boardpkg.InitialBoard(3), boardpkg.InitialBoard(4)} {
+		link := fmt.Sprintf(`href="/boards/%s"`, initial.ID())
+		if !strings.Contains(res.Body.String(), link) {
+			t.Errorf("index does not contain %q", link)
+		}
+
+		boardRes := httptest.NewRecorder()
+		newHandler().ServeHTTP(boardRes, httptest.NewRequest(http.MethodGet, "/boards/"+initial.ID(), nil))
+		if boardRes.Code != http.StatusOK {
+			t.Errorf("size %d initial board status = %d, want %d", initial.Size, boardRes.Code, http.StatusOK)
+		}
 	}
 }
 
@@ -67,7 +90,8 @@ func TestBoardHandlerErrors(t *testing.T) {
 	}{
 		{name: "invalid id", path: "/boards/not-an-id", want: http.StatusBadRequest},
 		{name: "unknown board", path: "/boards/2-1-0000000000000000", want: http.StatusNotFound},
-		{name: "unknown path", path: "/", want: http.StatusNotFound},
+		{name: "root page", path: "/", want: http.StatusOK},
+		{name: "unknown path", path: "/unknown", want: http.StatusNotFound},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"reversis-searcher/board"
 )
@@ -25,6 +27,38 @@ type BoardRow struct {
 type BoardCell struct {
 	Value board.Cell
 	Move  string
+}
+
+func NewBoardHandler(store board.Store) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/boards/") {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id := strings.TrimPrefix(r.URL.Path, "/boards/")
+		if id == "" || strings.Contains(id, "/") {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+		current, err := store.Get(id)
+		if errors.Is(err, board.ErrInvalidBoardID) {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, board.ErrBoardNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		WriteBoardPage(w, r, current)
+	})
 }
 
 func NewBoardPage(b board.Board) BoardPage {
