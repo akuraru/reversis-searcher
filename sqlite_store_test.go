@@ -86,7 +86,7 @@ func TestSQLiteBoardStoreRejectsInvalidTransitionAndMissingBoard(t *testing.T) {
 	if err := store.SaveTransition(initial.id(), initial.id()); !errors.Is(err, errInvalidTransition) {
 		t.Fatalf("same board transition error = %v, want %v", err, errInvalidTransition)
 	}
-	if _, err := store.Get("2-1-00000000000000000000000000000000"); !errors.Is(err, errBoardNotFound) {
+	if _, err := store.Get("2-1-0000000000000000"); !errors.Is(err, errBoardNotFound) {
 		t.Fatalf("missing board error = %v, want %v", err, errBoardNotFound)
 	}
 }

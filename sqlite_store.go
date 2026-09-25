@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
@@ -196,7 +195,11 @@ func boardDimension(size int) (int, bool) {
 }
 
 func (b board) id() string {
-	return fmt.Sprintf("%d-%d-%s", b.size, b.turn, hex.EncodeToString(b.cells))
+	cells := make([]byte, len(b.cells))
+	for index, cell := range b.cells {
+		cells[index] = '0' + cell
+	}
+	return fmt.Sprintf("%d-%d-%s", b.size, b.turn, cells)
 }
 
 func parseBoardID(id string) (board, error) {
@@ -213,12 +216,15 @@ func parseBoardID(id string) (board, error) {
 		return board{}, errInvalidBoardID
 	}
 	turn, err := strconv.Atoi(parts[1])
-	if err != nil || (turn != 1 && turn != 2 && turn != 3) || len(parts[2]) != dimension*dimension*2 {
+	if err != nil || (turn != 1 && turn != 2 && turn != 3) || len(parts[2]) != dimension*dimension {
 		return board{}, errInvalidBoardID
 	}
-	cells, err := hex.DecodeString(parts[2])
-	if err != nil {
-		return board{}, errInvalidBoardID
+	cells := make([]byte, len(parts[2]))
+	for index, cell := range []byte(parts[2]) {
+		if cell < '0' || cell > '2' {
+			return board{}, errInvalidBoardID
+		}
+		cells[index] = cell - '0'
 	}
 	for _, cell := range cells {
 		if cell > whiteCell {

@@ -66,7 +66,7 @@ func TestBoardHandlerErrors(t *testing.T) {
 		want int
 	}{
 		{name: "invalid id", path: "/boards/not-an-id", want: http.StatusBadRequest},
-		{name: "unknown board", path: "/boards/2-1-00000000000000000000000000000000", want: http.StatusNotFound},
+		{name: "unknown board", path: "/boards/2-1-0000000000000000", want: http.StatusNotFound},
 		{name: "unknown path", path: "/", want: http.StatusNotFound},
 	}
 	for _, test := range tests {

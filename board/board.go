@@ -1,7 +1,6 @@
 package board
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
@@ -55,11 +54,11 @@ func BoardDimension(size int) (int, bool) {
 }
 
 func (b Board) ID() string {
-	bytes := make([]byte, len(b.Cells))
+	cells := make([]byte, len(b.Cells))
 	for index, cell := range b.Cells {
-		bytes[index] = byte(cell)
+		cells[index] = '0' + byte(cell)
 	}
-	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, hex.EncodeToString(bytes))
+	return fmt.Sprintf("%d-%d-%s", b.Size, b.Turn, cells)
 }
 
 func ParseBoardID(id string) (Board, error) {
@@ -79,16 +78,15 @@ func ParseBoardID(id string) (Board, error) {
 	if err != nil || (turn != 1 && turn != 2 && turn != 3) {
 		return Board{}, ErrInvalidBoardID
 	}
-	if len(parts[2]) != dimension*dimension*2 {
+	if len(parts[2]) != dimension*dimension {
 		return Board{}, ErrInvalidBoardID
 	}
-	decoded, err := hex.DecodeString(parts[2])
-	if err != nil {
-		return Board{}, ErrInvalidBoardID
-	}
-	cells := make([]Cell, len(decoded))
-	for index, cell := range decoded {
-		cells[index] = Cell(cell)
+	cells := make([]Cell, len(parts[2]))
+	for index, cell := range []byte(parts[2]) {
+		if cell < '0' || cell > '2' {
+			return Board{}, ErrInvalidBoardID
+		}
+		cells[index] = Cell(cell - '0')
 	}
 	for _, cell := range cells {
 		if cell > WhiteCell {

@@ -37,9 +37,9 @@ func TestInitialBoardHasDimension(t *testing.T) {
 func TestParseBoardIDAcceptsValidIDs(t *testing.T) {
 	tests := []string{
 		InitialBoard().ID(),
-		"2-2-" + strings.Repeat("01", 16),
-		"2-3-" + strings.Repeat("02", 16),
-		"4-1-" + strings.Repeat("00", 64),
+		"2-2-" + strings.Repeat("1", 16),
+		"2-3-" + strings.Repeat("2", 16),
+		"4-1-" + strings.Repeat("0", 64),
 	}
 
 	for _, id := range tests {
@@ -57,9 +57,9 @@ func TestParseBoardIDRejectsInvalidIDs(t *testing.T) {
 		{name: "not three parts", id: "invalid"},
 		{name: "unsupported size", id: "1-1-0000"},
 		{name: "invalid turn", id: "2-0-0000000000000000"},
-		{name: "payload length mismatch", id: "2-1-00"},
-		{name: "malformed hex", id: "2-1-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"},
-		{name: "cell value out of range", id: "2-1-" + strings.Repeat("03", 16)},
+		{name: "payload length mismatch", id: "2-1-0"},
+		{name: "malformed cell", id: "2-1-zzzzzzzzzzzzzzzz"},
+		{name: "cell value out of range", id: "2-1-" + strings.Repeat("3", 16)},
 	}
 
 	for _, tt := range tests {
