@@ -57,8 +57,9 @@ func NewBoardPage(b board.Board) BoardPage {
 
 var BoardPageTemplate = template.Must(template.New("board").Parse(`<!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"><title>リバーシ {{.ID}}</title></head>
-<body>
+<meta charset="utf-8">
+<title>リバーシ {{.ID}}</title>
+
 <h1>リバーシ盤面</h1>
 <p>盤面ID: <code>{{.ID}}</code></p>
 <p>手番: {{if eq .Turn 1}}黒{{else if eq .Turn 2}}白{{else}}決着{{end}}</p>
@@ -67,8 +68,8 @@ var BoardPageTemplate = template.Must(template.New("board").Parse(`<!doctype htm
 <thead><tr><th></th>{{range .Columns}}<th>{{.}}</th>{{end}}</tr></thead>
 <tbody>{{range .Rows}}<tr><th>{{.Number}}</th>{{range .Cells}}<td>{{if .Move}}<a href="/boards/{{.Move}}">{{end}}{{if eq .Value 1}}●{{else if eq .Value 2}}○{{else}}・{{end}}{{if .Move}}</a>{{end}}</td>{{end}}</tr>{{end}}</tbody>
 </table>
-</body>
-</html>`))
+</html>
+`))
 
 func WriteBoardPage(w http.ResponseWriter, r *http.Request, b board.Board) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
